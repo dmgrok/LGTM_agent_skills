@@ -1,0 +1,38 @@
+name: 'LGTM Agent Skills Validator'
+description: 'Validate Agent Skills files with scoring and KPI breakdown'
+author: 'LGTM'
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  path:
+    description: 'Path to SKILL.md file or directory containing skills'
+    required: true
+    default: '.'
+  min-score:
+    description: 'Minimum score to pass (0-100)'
+    required: false
+    default: '70'
+  fail-on-error:
+    description: 'Fail the action if validation fails'
+    required: false
+    default: 'true'
+
+outputs:
+  score:
+    description: 'Global validation score (0-100)'
+  passed:
+    description: 'Whether validation passed (true/false)'
+  spec-compliance:
+    description: 'Spec compliance KPI score'
+  security:
+    description: 'Security KPI score'
+  content:
+    description: 'Content quality KPI score'
+  testing:
+    description: 'Testing & dependencies KPI score'
+
+runs:
+  using: 'node20'
+  main: 'dist/action.js'

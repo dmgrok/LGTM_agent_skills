@@ -4,7 +4,7 @@
  * Tests detection of various threat categories from Cisco skill-scanner taxonomy
  */
 
-import { SecurityScanner, RawSkill } from '../src/skill-intelligence.js';
+import { SecurityScanner, RawSkill } from '../src/scanners/index.js';
 
 const maliciousContent = `
 ---
@@ -50,49 +50,53 @@ const skill: RawSkill = {
   frontmatter: { name: 'malicious-test', description: 'A test skill with security issues' }
 };
 
-console.log('🔒 Security Scanner Test');
-console.log('========================\n');
+async function runTest() {
+  console.log('🔒 Security Scanner Test');
+  console.log('========================\n');
 
-const scanner = new SecurityScanner();
-const result = scanner.scan(skill);
+  const scanner = new SecurityScanner();
+  const result = await scanner.scan(skill);
 
-console.log('=== Scan Results ===');
-console.log(`Is Secure: ${result.isSecure}`);
-console.log(`Max Severity: ${result.maxSeverity}`);
-console.log(`Total Findings: ${result.findings.length}`);
-console.log(`Scan Duration: ${result.scanDuration}ms\n`);
+  console.log('=== Scan Results ===');
+  console.log(`Is Secure: ${result.isSecure}`);
+  console.log(`Max Severity: ${result.maxSeverity}`);
+  console.log(`Total Findings: ${result.findings.length}`);
+  console.log(`Scan Duration: ${result.scanDuration}ms\n`);
 
-// Group by category
-const byCategory = new Map<string, typeof result.findings>();
-for (const f of result.findings) {
-  const list = byCategory.get(f.category) || [];
-  list.push(f);
-  byCategory.set(f.category, list);
-}
+  // Group by category
+  const byCategory = new Map<string, typeof result.findings>();
+  for (const f of result.findings) {
+    const list = byCategory.get(f.category) || [];
+    list.push(f);
+    byCategory.set(f.category, list);
+  }
 
-console.log('=== Findings by Category ===');
-for (const [category, findings] of byCategory) {
-  console.log(`\n${category} (${findings.length} findings):`);
-  for (const f of findings) {
-    console.log(`  [${f.severity}] ${f.location}: "${f.match.slice(0, 60)}${f.match.length > 60 ? '...' : ''}"`);
+  console.log('=== Findings by Category ===');
+  for (const [category, findings] of byCategory) {
+    console.log(`\n${category} (${findings.length} findings):`);
+    for (const f of findings) {
+      console.log(`  [${f.severity}] ${f.location}: "${f.match.slice(0, 60)}${f.match.length > 60 ? '...' : ''}"`);
+    }
+  }
+
+  // Summary
+  console.log('\n=== Summary ===');
+  const bySeverity = {
+    CRITICAL: result.findings.filter(f => f.severity === 'CRITICAL').length,
+    HIGH: result.findings.filter(f => f.severity === 'HIGH').length,
+    MEDIUM: result.findings.filter(f => f.severity === 'MEDIUM').length
+  };
+  console.log(`CRITICAL: ${bySeverity.CRITICAL}`);
+  console.log(`HIGH: ${bySeverity.HIGH}`);
+  console.log(`MEDIUM: ${bySeverity.MEDIUM}`);
+
+  // Test passed?
+  if (result.isSecure) {
+    console.log('\n❌ TEST FAILED: Expected findings but got none!');
+    process.exit(1);
+  } else {
+    console.log('\n✅ TEST PASSED: Security issues correctly detected');
   }
 }
 
-// Summary
-console.log('\n=== Summary ===');
-const bySeverity = {
-  CRITICAL: result.findings.filter(f => f.severity === 'CRITICAL').length,
-  HIGH: result.findings.filter(f => f.severity === 'HIGH').length,
-  MEDIUM: result.findings.filter(f => f.severity === 'MEDIUM').length
-};
-console.log(`CRITICAL: ${bySeverity.CRITICAL}`);
-console.log(`HIGH: ${bySeverity.HIGH}`);
-console.log(`MEDIUM: ${bySeverity.MEDIUM}`);
-
-// Test passed?
-if (result.isSecure) {
-  console.log('\n❌ TEST FAILED: Expected findings but got none!');
-  process.exit(1);
-} else {
-  console.log('\n✅ TEST PASSED: Security issues correctly detected');
-}
+runTest().catch(console.error);
