@@ -1,0 +1,44 @@
+{
+  "name": "lgtm-agent-skills",
+  "version": "1.0.0",
+  "description": "LGTM (Looks Good To Me) - Agent Skills validation, security scanning, and quality analysis",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/",
+    "analyze": "tsx src/cli.ts analyze",
+    "validate": "tsx src/cli.ts validate",
+    "scaffold": "tsx src/cli.ts scaffold"
+  },
+  "keywords": [
+    "agent-skills",
+    "lgtm",
+    "validation",
+    "security-scanner",
+    "ai-agents",
+    "skill-validation",
+    "circular-dependency",
+    "test-runner"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "typescript": "^5.7.3",
+    "tsx": "^4.19.2",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dmgrok/LGTM_agent_skills"
+  }
+}
