@@ -140,9 +140,17 @@ jobs:
       - uses: actions/checkout@v4
       
       - uses: dmgrok/LGTM_agent_skills@v1
+        id: lgtm
         with:
-          path: './skills/'
+          path: './skills/SKILL.md'
           min-score: 70
+      
+      # Upload results artifact (always runs, even on failure)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lgtm-validation-results
+          path: lgtm-results.json
 ```
 
 ### With Lakera Guard
@@ -160,10 +168,46 @@ jobs:
       - uses: actions/checkout@v4
       
       - uses: dmgrok/LGTM_agent_skills@v1
+        id: lgtm
         with:
-          path: './skills/'
+          path: './skills/SKILL.md'
           min-score: 70
           lakera-api-key: ${{ secrets.LAKERA_GUARD_API_KEY }}
+      
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lgtm-validation-results
+          path: lgtm-results.json
+```
+
+### Scan Only Mode (No Failure)
+
+To scan without failing the workflow, useful for generating reports:
+
+```yaml
+name: Scan Skills
+on: [push, pull_request]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dmgrok/LGTM_agent_skills@v1
+        id: lgtm
+        with:
+          path: './skills/SKILL.md'
+          min-score: 70
+          fail-on-error: false  # Don't fail the workflow
+      
+      # Always upload results for analysis
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lgtm-scan-results
+          path: lgtm-results.json
 ```
 
 ### Inputs
@@ -176,6 +220,11 @@ jobs:
 | `skip-duplicates` | Skip duplicate check against public registries | `false` |
 | `lakera-api-key` | Lakera Guard API key for prompt injection detection | `''` |
 
+**Note:** Set `fail-on-error: false` to scan without failing the workflow. This is useful for:
+- Generating reports without blocking CI/CD
+- Collecting validation data over time
+- Gradual adoption in legacy projects
+
 ### Outputs
 
 | Output | Description |
@@ -187,6 +236,9 @@ jobs:
 | `content` | Content quality KPI score |
 | `testing` | Testing & dependencies KPI score |
 | `originality` | Originality KPI score (duplicate detection) |
+| `results-file` | Path to JSON results file (for artifacts) |
+
+**Artifact Output:** The action creates `lgtm-results.json` with complete validation data. Use `actions/upload-artifact@v4` with `if: always()` to capture results even when validation fails.
 
 ## Scoring System
 

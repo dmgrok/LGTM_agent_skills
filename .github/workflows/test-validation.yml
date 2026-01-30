@@ -27,10 +27,18 @@ jobs:
         run: npm run build
       
       - name: Validate test-skill-1
+        id: validate
         uses: ./
         with:
-          path: './test-skill-1'
+          path: './test-skill-1/SKILL.md'
           min-score: 70
+      
+      - name: Upload validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-1-results
+          path: lgtm-results.json
 
   test-multiple:
     name: Test 2 - Multiple Skills
@@ -50,10 +58,18 @@ jobs:
         run: npm run build
       
       - name: Validate multiple skills
+        id: validate
         uses: ./
         with:
-          path: './test-skill-2'
+          path: './test-skill-2/SKILL.md'
           min-score: 70
+      
+      - name: Upload validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-2-results
+          path: lgtm-results.json
 
   test-skip-duplicates:
     name: Test 3 - Skip Duplicates
@@ -73,11 +89,19 @@ jobs:
         run: npm run build
       
       - name: Validate with skip duplicates
+        id: validate
         uses: ./
         with:
-          path: './test-skill-3'
+          path: './test-skill-3/SKILL.md'
           min-score: 70
           skip-duplicates: true
+      
+      - name: Upload validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-3-results
+          path: lgtm-results.json
 
   test-high-threshold:
     name: Test 4 - High Score Threshold
@@ -97,10 +121,18 @@ jobs:
         run: npm run build
       
       - name: Validate with 95 min score
+        id: validate
         uses: ./
         with:
-          path: './test-skill-4'
+          path: './test-skill-4/SKILL.md'
           min-score: 95
+      
+      - name: Upload validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-4-results
+          path: lgtm-results.json
 
   test-security-issues:
     name: Test 5 - Security Detection
@@ -120,11 +152,19 @@ jobs:
         run: npm run build
       
       - name: Validate malicious skill (should pass with lower score)
+        id: validate
         uses: ./
         with:
-          path: './test-skill-10'
+          path: './test-skill-10/SKILL.md'
           min-score: 70
           fail-on-error: false
+      
+      - name: Upload validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-5-security-results
+          path: lgtm-results.json
 
   test-lakera-guard:
     name: Test 6 - Lakera Guard (Optional)
@@ -144,10 +184,18 @@ jobs:
         run: npm run build
       
       - name: Validate with Lakera Guard
+        id: validate
         uses: ./
         with:
-          path: './test-skill-10'
+          path: './test-skill-10/SKILL.md'
           min-score: 70
           lakera-api-key: ${{ secrets.LAKERA_GUARD_API_KEY }}
           fail-on-error: false
         continue-on-error: true
+      
+      - name: Upload validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-6-lakera-results
+          path: lgtm-results.json

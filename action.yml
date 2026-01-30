@@ -40,6 +40,8 @@ outputs:
     description: 'Content quality KPI score'
   testing:
     description: 'Testing & dependencies KPI score'
+  results-file:
+    description: 'Path to JSON results file for artifact upload'
 
 runs:
   using: 'node20'

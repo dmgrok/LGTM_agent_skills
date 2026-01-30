@@ -50,6 +50,7 @@ async function run(): Promise<void> {
     let allPassed = true;
     let totalScore = 0;
     const summaries: string[] = [];
+    const jsonResults: any[] = [];
 
     for (const skillPath of skillPaths) {
       core.startGroup(`Validating: ${skillPath}`);
@@ -80,6 +81,18 @@ async function run(): Promise<void> {
           }
         }
 
+        // Store JSON result for artifact
+        jsonResults.push({
+          skillPath: skillPath,
+          globalScore: result.score.globalScore,
+          passed: result.score.passed,
+          kpis: result.score.kpis.map(kpi => ({
+            name: kpi.name,
+            score: kpi.score,
+            passed: kpi.passed
+          }))
+        });
+
         if (!result.score.passed) {
           allPassed = false;
           core.error(`❌ ${skillPath}: Score ${result.score.globalScore}/100 - FAILED`);
@@ -103,6 +116,25 @@ async function run(): Promise<void> {
     summary += summaries.join('\n\n---\n\n');
 
     await core.summary.addRaw(summary).write();
+
+    // Write JSON results to file for artifact
+    const resultsPath = path.join(process.cwd(), 'lgtm-results.json');
+    await fs.promises.writeFile(
+      resultsPath,
+      JSON.stringify({
+        summary: {
+          skillsValidated: skillPaths.length,
+          averageScore: avgScore,
+          passed: allPassed,
+          minScore: minScore
+        },
+        results: jsonResults
+      }, null, 2)
+    );
+    core.info(`📄 Results saved to ${resultsPath}`);
+
+    // Set output for artifact path
+    core.setOutput('results-file', resultsPath);
 
     // Fail if validation failed and fail-on-error is true
     if (!allPassed && failOnError) {
