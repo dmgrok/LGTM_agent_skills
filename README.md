@@ -4,17 +4,17 @@
 
 ## Overview
 
-LGTM Agent Skills provides comprehensive tooling for validating, scanning, and analyzing AI agent skills according to the [Agent Skills Specification](https://agentskills.io/specification).
+LGTM Agent Skills provides comprehensive tooling for validating AI agent skills according to the [Agent Skills Specification](https://agentskills.io/specification). It can be used as a **CLI tool** or **GitHub Action**.
 
 ### Features
 
+- **Scoring System** - Global score (0-100) with KPI breakdown
 - **Spec Compliance Validation** - Deterministic validation against the official Agent Skills spec
 - **Security Scanner** - Based on [Cisco AI Defense skill-scanner](https://github.com/cisco-ai-defense/skill-scanner) threat taxonomy
+- **Secret Detection** - Uses industry-standard tools (gitleaks, trufflehog) instead of regex
 - **Circular Dependency Detection** - DFS-based cycle detection for skill dependencies
-- **Test Runner** - Assertion-based testing (output_contains, output_matches, etc.)
-- **Skill Scaffolder** - Generate new skill templates following the spec
-- **Duplicate Detection** - Content similarity analysis
-- **Semantic Extraction** - Technology and domain classification
+- **Test Validation** - Checks for test cases and dependencies
+- **GitHub Action** - Integrates into CI/CD pipelines
 
 ## Installation
 
@@ -23,105 +23,179 @@ npm install
 npm run build
 ```
 
-## Usage
+### Global CLI Installation
+
+```bash
+npm install -g .
+lgtm-skills --help
+```
+
+### Secret Detection Tools (Recommended)
+
+For best secret detection accuracy, install one of these tools:
+
+```bash
+# Option 1: Gitleaks (recommended)
+brew install gitleaks
+
+# Option 2: TruffleHog
+brew install trufflehog
+
+# The scanner will use these automatically if available,
+# otherwise falls back to pattern-based detection.
+```
+
+## CLI Usage
 
 ### Validate a Skill
 
-```typescript
-import { SpecValidator, RawSkill } from './src/skill-intelligence.js';
+```bash
+# Validate a single skill
+lgtm-skills validate ./my-skill/
 
-const validator = new SpecValidator();
-const result = validator.validate(skill);
+# Validate with custom threshold
+lgtm-skills validate ./my-skill --min-score 80
 
-if (result.isValid) {
-  console.log('✓ Skill is valid');
-} else {
-  console.log('Errors:', result.errors);
-}
+# JSON output for CI
+lgtm-skills validate ./my-skill --format json
+
+# GitHub format (for Actions)
+lgtm-skills validate ./my-skill --format github
 ```
 
-### Security Scan
+### Example Output
 
-```typescript
-import { SecurityScanner } from './src/skill-intelligence.js';
+```
+═══════════════════════════════════════════════════════════════
+  LGTM Agent Skills Validator - Score: 95/100
+═══════════════════════════════════════════════════════════════
 
-const scanner = new SecurityScanner();
-const evaluation = await scanner.evaluate(skill);
+✅ Spec Compliance        [████████████████████] 100/100 (weight: 40%)
+   ✓ Passes Agent Skills specification | ✓ No spec errors
 
-console.log(evaluation.observations);
-console.log(evaluation.suggestions);
+✅ Security               [████████████████████] 100/100 (weight: 40%)
+   ✓ No security issues detected
+
+✅ Content Quality        [████████████████░░░░] 80/100 (weight: 10%)
+   ✓ Contains examples | ✓ Contains instructions/steps
+
+✅ Testing & Dependencies [██████████████░░░░░░] 70/100 (weight: 10%)
+   ⚠️ No test cases defined
+
+───────────────────────────────────────────────────────────────
+  ✅ Score: 95/100 - Skill passes validation
+───────────────────────────────────────────────────────────────
 ```
 
-### Check Circular Dependencies
+### Security Scan Only
 
-```typescript
-import { CircularDependencyDetector } from './src/skill-intelligence.js';
-
-const detector = new CircularDependencyDetector();
-const result = detector.check(skills);
-
-if (result.hasCircular) {
-  console.log('Cycles found:', result.cycles);
-}
+```bash
+lgtm-skills scan ./my-skill/
 ```
 
-### Run Tests
+### Scaffold a New Skill
 
-```typescript
-import { SkillTestRunner, SkillTestCase } from './src/skill-intelligence.js';
-
-const runner = new SkillTestRunner();
-const testCase: SkillTestCase = {
-  name: 'basic_test',
-  input: 'Test input',
-  assertions: {
-    output_contains: ['expected'],
-    output_not_contains: ['error']
-  }
-};
-
-const result = await runner.runTestCase(testCase, skillContent, agentRunner);
+```bash
+lgtm-skills scaffold my-new-skill
 ```
 
-### Scaffold New Skill
+## GitHub Action
+
+Add to your workflow:
+
+```yaml
+name: Validate Skills
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dmgrok/LGTM_agent_skills@v1
+        with:
+          path: './skills/'
+          min-score: 70
+```
+
+### Inputs
+
+| Input | Description | Default |
+|-------|-------------|---------|
+| `path` | Path to SKILL.md file or directory | `.` |
+| `min-score` | Minimum score to pass (0-100) | `70` |
+| `fail-on-error` | Fail the action if validation fails | `true` |
+
+### Outputs
+
+| Output | Description |
+|--------|-------------|
+| `score` | Global validation score (0-100) |
+| `passed` | Whether validation passed (true/false) |
+| `spec-compliance` | Spec compliance KPI score |
+| `security` | Security KPI score |
+| `content` | Content quality KPI score |
+| `testing` | Testing & dependencies KPI score |
+
+## Scoring System
+
+The global score is a weighted average of four KPIs:
+
+| KPI | Weight | Description |
+|-----|--------|-------------|
+| **Spec Compliance** | 40% | Valid frontmatter, name format, description |
+| **Security** | 40% | No threats, secrets, or malicious patterns |
+| **Content Quality** | 10% | Word count, examples, instructions |
+| **Testing** | 10% | Test cases, dependency validation |
+
+### Scoring Rules
+
+- **Critical security issues**: -50 points
+- **High security issues**: -25 points
+- **Spec errors**: -25 points each
+- **Spec warnings**: -5 points each
+- **No tests defined**: -30 points
+- **No examples**: -15 points
+
+## Architecture
+
+```
+src/
+  cli.ts                      # CLI entry point
+  action.ts                   # GitHub Action entry point
+  analyzer.ts                 # Main analysis orchestrator
+  scoring.ts                  # Scoring calculation
+  index.ts                    # Package exports
+  scanners/
+    types.ts                  # Shared types and interfaces
+    spec-validator.ts         # Agent Skills spec validation
+    security-scanner.ts       # Security threats and secrets
+    dependency-validator.ts   # Dependencies and tests
+    test-runner.ts            # Test execution and scaffolding
+    index.ts                  # Module exports
+```
+
+## Programmatic Usage
 
 ```typescript
-import { SkillScaffolder } from './src/skill-intelligence.js';
+import { analyzeSkill, validateSkill, SkillAnalyzer } from 'lgtm-agent-skills';
 
-const scaffolder = new SkillScaffolder();
-const result = scaffolder.scaffold({
-  name: 'my-new-skill',
-  description: 'A skill that does something useful',
-  includeTests: true
+// Quick validation
+const result = await validateSkill('./my-skill/SKILL.md');
+console.log(`Score: ${result.score}, Passed: ${result.passed}`);
+
+// Full analysis
+const analysis = await analyzeSkill('./my-skill/SKILL.md');
+console.log(analysis.score.kpis);
+
+// Custom options
+const analyzer = new SkillAnalyzer({
+  scoring: { minGlobalScore: 80 },
+  format: 'json'
 });
-
-console.log(result.skillMd);      // SKILL.md content
-console.log(result.testCasesYaml); // test/cases.yaml
+const result = await analyzer.analyze('./my-skill/SKILL.md');
 ```
-
-## Security Threat Taxonomy
-
-Based on the Cisco AI Defense framework, LGTM detects:
-
-| Category | AITech | Severity |
-|----------|--------|----------|
-| Prompt Injection | AITech-1.1, 1.2 | HIGH |
-| Code Injection | AITech-9.1.4 | CRITICAL |
-| Data Exfiltration | AITech-8.2, 8.2.3 | CRITICAL |
-| Hardcoded Secrets | AITech-8.2 | CRITICAL |
-| Tool Abuse | AITech-12.1 | HIGH |
-| Obfuscation | - | HIGH |
-| Social Engineering | AITech-2.1 | MEDIUM |
-| Transitive Trust | AITech-1.2 | HIGH |
-| Autonomy Abuse | AITech-9.1 | MEDIUM |
-| Tool Chaining | AITech-8.2.3 | HIGH |
-| Resource Abuse | AITech-13.3.2 | MEDIUM |
-
-## References
-
-- [Agent Skills Specification](https://agentskills.io/specification)
-- [Cisco skill-scanner](https://github.com/cisco-ai-defense/skill-scanner)
-- [scalble_skills RFC](https://github.com/AndoSan84/scalble_skills)
 
 ## License
 

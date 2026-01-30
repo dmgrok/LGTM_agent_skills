@@ -12,7 +12,7 @@ import {
   SkillScaffolder,
   RawSkill,
   SkillTestCase
-} from '../src/skill-intelligence.js';
+} from '../src/scanners/index.js';
 
 // ============================================================================
 // Test Data

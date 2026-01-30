@@ -7,6 +7,7 @@
  * @see https://agentskills.io/specification
  */
 
+// Re-export from scanners module
 export {
   // Spec constants
   AGENT_SKILLS_SPEC,
@@ -17,22 +18,14 @@ export {
   type SpecComplianceResult,
   type SpecViolation,
   type QualityEvaluation,
-  type DuplicateGroup,
-  type SemanticInfo,
-  type EnrichedSkill,
-  type IntelligenceCatalog,
+  type QualityEvaluator,
   
   // Validator
   SpecValidator,
   
-  // Evaluators
-  type QualityEvaluator,
-  ObjectiveMetricsEvaluator,
-  LLMQualityEvaluator,
-  
   // Security Scanner
   THREAT_TAXONOMY,
-  type ThreatCategory,
+  type ThreatCategoryType,
   type Severity,
   type SecurityFinding,
   type SecurityScanResult,
@@ -61,14 +54,39 @@ export {
   type ScaffoldOptions,
   type ScaffoldResult,
   SkillScaffolder,
-  
-  // Semantic Extraction
-  SemanticExtractor,
-  
-  // Duplicate Detection
-  DuplicateDetector,
-  
-  // Main Pipeline
-  type PipelineOptions,
-  SkillIntelligencePipeline
-} from './skill-intelligence.js';
+} from './scanners/index.js';
+
+// Export from scoring
+export {
+  type KPIScore,
+  type ScoreResult,
+  type ScoringOptions,
+  ScoringCalculator,
+  formatScoreForCLI,
+  formatScoreForGitHubAction,
+} from './scoring.js';
+
+// Export from analyzer
+export {
+  type AnalyzerOptions,
+  type AnalysisResult,
+  SkillAnalyzer,
+  parseSkillFile,
+  analyzeSkill,
+  validateSkill,
+} from './analyzer.js';
+
+// Export from registry (duplicate detection against public skills)
+export {
+  type SkillMetadata,
+  type SkillRegistry,
+  type DuplicateMatch,
+  type DuplicateCheckResult,
+  type RegistryUpdateStats,
+  SKILLS_SH_API,
+  SkillsRegistryManager,
+  RegistryDuplicateDetector,
+  checkDuplicatesAgainstRegistry,
+  updateSkillsRegistry,
+  listRegistrySkills,
+} from './registry.js';
