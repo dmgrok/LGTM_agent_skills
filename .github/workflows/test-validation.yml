@@ -30,7 +30,7 @@ jobs:
         id: validate
         uses: ./
         with:
-          path: './test-skill-1/SKILL.md'
+          path: './tests/test-skill-1/SKILL.md'
           min-score: 70
       
       - name: Upload validation results
@@ -61,7 +61,7 @@ jobs:
         id: validate
         uses: ./
         with:
-          path: './test-skill-2/SKILL.md'
+          path: './tests/test-skill-2/SKILL.md'
           min-score: 70
       
       - name: Upload validation results
@@ -124,7 +124,7 @@ jobs:
         id: validate
         uses: ./
         with:
-          path: './test-skill-4/SKILL.md'
+          path: './tests/test-skill-4/SKILL.md'
           min-score: 95
       
       - name: Upload validation results
@@ -155,7 +155,7 @@ jobs:
         id: validate
         uses: ./
         with:
-          path: './test-skill-10/SKILL.md'
+          path: './tests/test-skill-10/SKILL.md'
           min-score: 70
           fail-on-error: false
       
@@ -187,7 +187,7 @@ jobs:
         id: validate
         uses: ./
         with:
-          path: './test-skill-10/SKILL.md'
+          path: './tests/test-skill-10/SKILL.md'
           min-score: 70
           lakera-api-key: ${{ secrets.LAKERA_GUARD_API_KEY }}
           fail-on-error: false
