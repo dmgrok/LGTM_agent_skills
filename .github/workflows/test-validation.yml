@@ -92,7 +92,7 @@ jobs:
         id: validate
         uses: ./
         with:
-          path: './test-skill-3/SKILL.md'
+          path: './tests/test-skill-3/SKILL.md'
           min-score: 70
           skip-duplicates: true
       
