@@ -118,7 +118,8 @@ async function run(): Promise<void> {
     await core.summary.addRaw(summary).write();
 
     // Write JSON results to file for artifact
-    const resultsPath = path.join(process.cwd(), 'lgtm-results.json');
+    const workspaceDir = process.env.GITHUB_WORKSPACE || process.cwd();
+    const resultsPath = path.join(workspaceDir, 'lgtm-results.json');
     await fs.promises.writeFile(
       resultsPath,
       JSON.stringify({
