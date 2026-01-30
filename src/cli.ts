@@ -35,6 +35,8 @@ interface CLIArgs {
   verbose: boolean;
   help: boolean;
   skipDuplicates: boolean;
+  enableLakera: boolean;
+  lakeraApiKey?: string;
 }
 
 function parseArgs(argv: string[]): CLIArgs {
@@ -47,6 +49,8 @@ function parseArgs(argv: string[]): CLIArgs {
     verbose: false,
     help: false,
     skipDuplicates: false,
+    enableLakera: false,
+    lakeraApiKey: undefined,
   };
 
   let i = 0;
@@ -59,6 +63,11 @@ function parseArgs(argv: string[]): CLIArgs {
       result.verbose = true;
     } else if (arg === '--skip-duplicates' || arg === '--offline') {
       result.skipDuplicates = true;
+    } else if (arg === '--lakera') {
+      result.enableLakera = true;
+    } else if (arg === '--lakera-key') {
+      result.enableLakera = true;
+      result.lakeraApiKey = args[++i];
     } else if (arg === '--format' || arg === '-f') {
       result.format = args[++i] as 'cli' | 'json' | 'github';
     } else if (arg === '--min-score') {
@@ -96,6 +105,9 @@ OPTIONS:
   --min-score <n>     Minimum passing score 0-100 (default: 70)
   --skip-duplicates   Skip duplicate check against public registries
   --offline           Alias for --skip-duplicates
+  --lakera            Enable Lakera Guard prompt injection detection
+                      (uses LAKERA_GUARD_API_KEY env var)
+  --lakera-key <key>  Lakera Guard API key (or use env var)
   -v, --verbose       Show detailed scanner output
   -h, --help          Show this help message
 
@@ -106,6 +118,16 @@ DUPLICATE DETECTION:
     - remotion-dev/skills
   
   Use --skip-duplicates to run offline or speed up validation.
+
+LAKERA GUARD (Professional Prompt Injection Detection):
+  Enable with --lakera flag. Requires LAKERA_GUARD_API_KEY env var.
+  Get your free API key at: https://platform.lakera.ai/
+  
+  Lakera Guard detects:
+    - Prompt injection attacks
+    - Jailbreak attempts
+    - PII leakage
+    - Unknown/suspicious links
 
 EXAMPLES:
   # Validate a single skill
@@ -150,6 +172,11 @@ async function validateCommand(args: CLIArgs): Promise<number> {
     skipDuplicateCheck: args.skipDuplicates,
     scoring: {
       minGlobalScore: args.minScore,
+    },
+    security: {
+      verbose: args.verbose,
+      enableLakera: args.enableLakera,
+      lakeraApiKey: args.lakeraApiKey,
     },
   };
 
@@ -233,9 +260,19 @@ async function scanCommand(args: CLIArgs): Promise<number> {
   }
 
   const skillPaths = resolveSkillPaths(args.paths);
-  const scanner = new SecurityScanner({ skipSecretDetection: false });
+  const scanner = new SecurityScanner({ 
+    skipSecretDetection: false,
+    verbose: args.verbose,
+    enableLakera: args.enableLakera,
+    lakeraApiKey: args.lakeraApiKey,
+  });
 
   let hasFindings = false;
+
+  if (args.enableLakera && args.verbose) {
+    const hasKey = !!(args.lakeraApiKey || process.env.LAKERA_GUARD_API_KEY);
+    console.log(`Lakera Guard: ${hasKey ? 'enabled' : 'no API key found'}`);
+  }
 
   for (const skillPath of skillPaths) {
     try {

@@ -1,0 +1,153 @@
+name: Test LGTM Skills Validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'test-skill-*/**'
+      - '.github/workflows/test-validation.yml'
+
+jobs:
+  test-basic:
+    name: Test 1 - Basic Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Validate test-skill-1
+        uses: ./
+        with:
+          path: './test-skill-1'
+          min-score: 70
+
+  test-multiple:
+    name: Test 2 - Multiple Skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Validate multiple skills
+        uses: ./
+        with:
+          path: './test-skill-2'
+          min-score: 70
+
+  test-skip-duplicates:
+    name: Test 3 - Skip Duplicates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Validate with skip duplicates
+        uses: ./
+        with:
+          path: './test-skill-3'
+          min-score: 70
+          skip-duplicates: true
+
+  test-high-threshold:
+    name: Test 4 - High Score Threshold
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Validate with 95 min score
+        uses: ./
+        with:
+          path: './test-skill-4'
+          min-score: 95
+
+  test-security-issues:
+    name: Test 5 - Security Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Validate malicious skill (should pass with lower score)
+        uses: ./
+        with:
+          path: './test-skill-10'
+          min-score: 70
+          fail-on-error: false
+
+  test-lakera-guard:
+    name: Test 6 - Lakera Guard (Optional)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Validate with Lakera Guard
+        uses: ./
+        with:
+          path: './test-skill-10'
+          min-score: 70
+          lakera-api-key: ${{ secrets.LAKERA_GUARD_API_KEY }}
+          fail-on-error: false
+        continue-on-error: true

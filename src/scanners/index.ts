@@ -25,10 +25,12 @@ export {
   GitleaksDetector,
   TruffleHogDetector,
   FallbackSecretDetector,
+  LakeraGuardDetector,
   THREAT_TAXONOMY,
   type SecretDetector,
   type SecurityScannerOptions,
-  type ThreatCategoryType
+  type ThreatCategoryType,
+  type LakeraGuardResult
 } from './security-scanner.js';
 export { 
   DependencyValidator, 

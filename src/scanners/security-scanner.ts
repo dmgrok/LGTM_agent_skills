@@ -497,6 +497,104 @@ export class FallbackSecretDetector implements SecretDetector {
 }
 
 // ============================================================================
+// Lakera Guard API (Professional Prompt Injection Detection)
+// ============================================================================
+
+export interface LakeraGuardResult {
+  flagged: boolean;
+  breakdown?: {
+    prompt_injection?: { detected: boolean };
+    jailbreak?: { detected: boolean };
+    unknown_links?: { detected: boolean };
+    relevant_language?: { detected: boolean };
+    pii?: { detected: boolean };
+    [key: string]: { detected: boolean } | undefined;
+  };
+  metadata?: { request_uuid: string };
+}
+
+/**
+ * Lakera Guard API client for professional prompt injection detection
+ * @see https://docs.lakera.ai/docs/api
+ */
+export class LakeraGuardDetector {
+  name = 'lakera-guard';
+  private apiKey: string | undefined;
+
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey || process.env.LAKERA_GUARD_API_KEY;
+  }
+
+  isAvailable(): boolean {
+    return !!this.apiKey;
+  }
+
+  async detect(content: string): Promise<SecurityFinding[]> {
+    if (!this.apiKey) {
+      return [];
+    }
+
+    const findings: SecurityFinding[] = [];
+
+    try {
+      const response = await fetch('https://api.lakera.ai/v2/guard', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content }],
+          breakdown: true
+        })
+      });
+
+      if (!response.ok) {
+        console.warn(`Lakera API error: ${response.status}`);
+        return [];
+      }
+
+      const result = (await response.json()) as LakeraGuardResult;
+
+      if (result.flagged && result.breakdown) {
+        // Map Lakera categories to our threat taxonomy
+        const categoryMap: Record<string, { category: string; severity: Severity; aitech: string[] }> = {
+          prompt_injection: { category: 'PROMPT_INJECTION', severity: 'HIGH', aitech: ['AITech-1.1', 'AITech-1.2'] },
+          jailbreak: { category: 'PROMPT_INJECTION', severity: 'CRITICAL', aitech: ['AITech-1.1'] },
+          unknown_links: { category: 'TRANSITIVE_TRUST', severity: 'MEDIUM', aitech: ['AITech-1.2'] },
+          pii: { category: 'DATA_EXFILTRATION', severity: 'MEDIUM', aitech: ['AITech-8.2'] },
+        };
+
+        for (const [category, data] of Object.entries(result.breakdown)) {
+          if (data?.detected) {
+            const mapping = categoryMap[category] || { 
+              category: 'PROMPT_INJECTION', 
+              severity: 'HIGH' as Severity, 
+              aitech: [] 
+            };
+            
+            findings.push({
+              category: mapping.category,
+              aitech: mapping.aitech,
+              severity: mapping.severity,
+              description: `Lakera Guard detected: ${category}`,
+              match: `[Lakera Guard: ${category}]`,
+              location: 'Content',
+              confidence: 0.95, // Lakera Guard has high accuracy
+              detector: 'lakera-guard'
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`Lakera Guard scan failed: ${error}`);
+    }
+
+    return findings;
+  }
+}
+
+// ============================================================================
 // Security Scanner (Main Class)
 // ============================================================================
 
@@ -507,15 +605,21 @@ export interface SecurityScannerOptions {
   skipSecretDetection?: boolean;
   /** Enable verbose output */
   verbose?: boolean;
+  /** Lakera Guard API key for professional prompt injection detection */
+  lakeraApiKey?: string;
+  /** Enable Lakera Guard (uses LAKERA_GUARD_API_KEY env var if no key provided) */
+  enableLakera?: boolean;
 }
 
 /**
  * Security scanner implementing Cisco skill-scanner threat taxonomy
  * Uses proper secret detection tools (gitleaks/trufflehog) when available
+ * Optionally integrates with Lakera Guard for professional prompt injection detection
  */
 export class SecurityScanner implements QualityEvaluator {
   name = 'security-scanner';
   private secretDetector: SecretDetector | null = null;
+  private lakeraDetector: LakeraGuardDetector | null = null;
   private detectorInitialized = false;
   private options: SecurityScannerOptions;
 
@@ -524,6 +628,11 @@ export class SecurityScanner implements QualityEvaluator {
       preferredDetectors: ['gitleaks', 'trufflehog', 'fallback'],
       ...options
     };
+
+    // Initialize Lakera Guard if enabled
+    if (options.enableLakera || options.lakeraApiKey) {
+      this.lakeraDetector = new LakeraGuardDetector(options.lakeraApiKey);
+    }
   }
 
   private async initializeSecretDetector(): Promise<void> {
@@ -618,7 +727,23 @@ export class SecurityScanner implements QualityEvaluator {
       }
     }
 
-    // 2. Scan for other threat categories (pattern-based)
+    // 2. Scan with Lakera Guard (professional prompt injection detection)
+    if (this.lakeraDetector && this.lakeraDetector.isAvailable()) {
+      try {
+        if (this.options.verbose) {
+          console.log('  Scanning with Lakera Guard...');
+        }
+        const lakeraFindings = await this.lakeraDetector.detect(content);
+        findings.push(...lakeraFindings);
+        if (lakeraFindings.length > 0 && this.options.verbose) {
+          console.log(`  Lakera Guard found ${lakeraFindings.length} issue(s)`);
+        }
+      } catch (error) {
+        console.warn(`Lakera Guard scan failed: ${error}`);
+      }
+    }
+
+    // 3. Scan for other threat categories (pattern-based)
     for (const [category, threat] of Object.entries(THREAT_TAXONOMY)) {
       for (const pattern of threat.patterns) {
         // Search line by line for better location reporting

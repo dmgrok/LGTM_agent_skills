@@ -17,9 +17,14 @@ async function run(): Promise<void> {
     const inputPath = core.getInput('path') || '.';
     const minScore = parseInt(core.getInput('min-score') || '70', 10);
     const failOnError = core.getInput('fail-on-error') !== 'false';
+    const skipDuplicates = core.getInput('skip-duplicates') === 'true';
+    const lakeraApiKey = core.getInput('lakera-api-key') || process.env.LAKERA_GUARD_API_KEY;
 
     core.info(`🔍 Validating Agent Skills at: ${inputPath}`);
     core.info(`📊 Minimum score: ${minScore}`);
+    if (lakeraApiKey) {
+      core.info(`🛡️ Lakera Guard: enabled`);
+    }
 
     // Resolve skill paths
     const skillPaths = resolveSkillPaths(inputPath);
@@ -35,6 +40,11 @@ async function run(): Promise<void> {
     const analyzer = new SkillAnalyzer({
       format: 'github',
       scoring: { minGlobalScore: minScore },
+      skipDuplicateCheck: skipDuplicates,
+      security: {
+        enableLakera: !!lakeraApiKey,
+        lakeraApiKey: lakeraApiKey,
+      },
     });
 
     let allPassed = true;

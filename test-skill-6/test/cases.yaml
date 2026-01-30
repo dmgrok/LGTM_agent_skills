@@ -1,0 +1,20 @@
+# Test cases for test-skill-6
+# @see https://agentskills.io/specification#testing
+
+cases:
+  - name: basic_test
+    description: TODO - Describe what this test verifies
+    input: "TODO - The prompt to send"
+    assertions:
+      output_contains:
+        - "expected text"
+      output_not_contains:
+        - "error"
+        - "failed"
+
+  - name: edge_case_test
+    description: TODO - Test edge case handling
+    input: "TODO - Edge case input"
+    assertions:
+      output_matches:
+        - "pattern.*to.*match"

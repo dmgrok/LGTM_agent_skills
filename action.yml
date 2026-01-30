@@ -18,6 +18,14 @@ inputs:
     description: 'Fail the action if validation fails'
     required: false
     default: 'true'
+  skip-duplicates:
+    description: 'Skip duplicate check against public registries'
+    required: false
+    default: 'false'
+  lakera-api-key:
+    description: 'Lakera Guard API key for professional prompt injection detection'
+    required: false
+    default: ''
 
 outputs:
   score:
