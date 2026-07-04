@@ -17,6 +17,7 @@ LGTM Agent Skills provides comprehensive tooling for validating AI agent skills 
 - **Circular Dependency Detection** - DFS-based cycle detection for skill dependencies
 - **Test Validation** - Checks for test cases and dependencies
 - **GitHub Action** - Integrates into CI/CD pipelines
+- **Claude Code Hooks** - Real-time validation as you edit, pre-commit gates, and `/lgtm` command
 
 ## Installation
 
@@ -299,6 +300,78 @@ src/
     dependency-validator.ts   # Dependencies and tests
     test-runner.ts            # Test execution and scaffolding
     index.ts                  # Module exports
+.claude/
+  settings.json               # Hook configuration
+  hooks/
+    lgtm-validate.sh          # Post-edit validation hook
+    lgtm-precommit.sh         # Pre-commit gate hook
+  commands/
+    lgtm.md                   # /lgtm slash command
+hooks/
+  install.sh                  # One-line installer for other projects
+  uninstall.sh                # Removes hooks from a project
+```
+
+## Claude Code Integration
+
+LGTM provides first-class [Claude Code hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) for real-time skill validation — similar to how [skills.sh automated security audits](https://vercel.com/changelog/automated-security-audits-now-available-for-skills-sh) work at registry level, but running locally in your editor.
+
+### Quick Install
+
+```bash
+# In any project with SKILL.md files:
+curl -sSL https://raw.githubusercontent.com/dmgrok/LGTM_agent_skills/main/hooks/install.sh | bash
+```
+
+Or manually copy the hooks from the `hooks/` directory.
+
+### What It Does
+
+| Hook | Trigger | Behavior |
+|------|---------|----------|
+| **Post-edit validation** | After Claude writes/edits a SKILL.md | Shows score and issues inline |
+| **Pre-commit gate** | Before `git commit` with staged SKILL.md | Blocks commit if validation fails |
+| **`/lgtm` command** | On-demand | Full validation with score breakdown |
+
+### Manual Setup
+
+Add to your project's `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/lgtm-validate.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/lgtm-precommit.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Uninstall
+
+```bash
+bash hooks/uninstall.sh
 ```
 
 ## Programmatic Usage
