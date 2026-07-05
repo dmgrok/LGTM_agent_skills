@@ -5,7 +5,7 @@ Claude Code's `.claude/` folder has no validation. You can ship a `settings.json
 This is a linter for `.claude/`. It also ships a preset system for installing validated Claude Code configurations.
 
 ```bash
-npm install -g github:dmgrok/claude-code-lgtm
+npm install -g github:dmgrok/LGTM_agent_skills
 lgtm
 ```
 
@@ -60,9 +60,9 @@ lgtm
 The package is not yet published to npm. Install from GitHub:
 
 ```bash
-npm install -g github:dmgrok/claude-code-lgtm
+npm install -g github:dmgrok/LGTM_agent_skills
 # or run once:
-npx github:dmgrok/claude-code-lgtm
+npx github:dmgrok/LGTM_agent_skills
 ```
 
 **Prerequisites:** Node >= 18. For optional features: `jq` (required by preset hooks), `gitleaks` (secret scanning), `LAKERA_GUARD_API_KEY` (ML-based prompt injection detection).
@@ -211,7 +211,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dmgrok/claude-code-lgtm@main
+      - uses: dmgrok/LGTM_agent_skills@main
         with:
           path: '.'
           fail-on-error: true
@@ -219,15 +219,27 @@ jobs:
 
 | Input | Default | Description |
 |-------|---------|-------------|
-| `path` | `.` | Path to check |
-| `fail-on-error` | `true` | Fail the action on errors |
+| `path` | `.` | Path to SKILL.md file or directory containing skills |
+| `min-score` | `70` | Minimum score to pass (0–100) |
+| `fail-on-error` | `true` | Fail the action if validation fails |
+| `skip-duplicates` | `false` | Skip duplicate check against public registries |
 | `lakera-api-key` | `''` | Lakera Guard API key for ML-based prompt injection |
+
+| Output | Description |
+|--------|-------------|
+| `score` | Global validation score (0–100) |
+| `passed` | Whether validation passed (true/false) |
+| `spec-compliance` | Spec compliance KPI score |
+| `security` | Security KPI score |
+| `content` | Content quality KPI score |
+| `testing` | Testing & dependencies KPI score |
+| `results-file` | Path to JSON results file for artifact upload |
 
 ## Programmatic API
 
 ```typescript
-import { scanProject, runRules, formatResults, ALL_RULES } from 'claude-code-lgtm';
-import { compareCommand, parseSession, estimateSavings } from 'claude-code-lgtm';
+import { scanProject, runRules, formatResults, ALL_RULES } from 'lgtm';
+import { compareCommand, parseSession, estimateSavings } from 'lgtm';
 
 // Lint .claude/ config
 const files = await scanProject({ path: './my-project' });
