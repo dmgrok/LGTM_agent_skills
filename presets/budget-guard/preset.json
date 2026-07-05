@@ -1,0 +1,32 @@
+{
+  "name": "budget-guard",
+  "version": "1.0.0",
+  "description": "Per-tool-call budget enforcement — warns at 80% and blocks tool calls when session cost exceeds limit",
+  "tags": ["budget", "cost", "safety"],
+  "config": {
+    "budget": {
+      "type": "number",
+      "default": 10,
+      "description": "Maximum session cost in USD"
+    },
+    "warn_at": {
+      "type": "number",
+      "default": 0.8,
+      "description": "Fraction of budget at which to start warning (0.0-1.0)"
+    }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/budget-guard.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

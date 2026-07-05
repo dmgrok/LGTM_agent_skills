@@ -7,12 +7,18 @@ export interface HookEntry {
     matcher: string;
     hooks: HookDefinition[];
 }
+export interface PresetConfigParam {
+    type: 'string' | 'number' | 'boolean';
+    default: string | number | boolean;
+    description: string;
+}
 export interface PresetManifest {
     name: string;
     version: string;
     description: string;
     author?: string;
     tags?: string[];
+    config?: Record<string, PresetConfigParam>;
     settings?: {
         model?: string;
         effortLevel?: string;

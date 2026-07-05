@@ -26,6 +26,7 @@ interface CLIArgs {
   force: boolean;
   session?: string;
   prompt?: string;
+  set: Record<string, string | number | boolean>;
 }
 
 function parseArgs(argv: string[]): CLIArgs {
@@ -36,6 +37,7 @@ function parseArgs(argv: string[]): CLIArgs {
     help: false,
     version: false,
     force: false,
+    set: {},
   };
 
   let i = 0;
@@ -52,6 +54,15 @@ function parseArgs(argv: string[]): CLIArgs {
       result.session = args[++i];
     } else if (arg === '--prompt') {
       result.prompt = args[++i];
+    } else if (arg === '--set') {
+      const pair = args[++i];
+      if (pair && pair.includes('=')) {
+        const eq = pair.indexOf('=');
+        const k = pair.slice(0, eq);
+        const v = pair.slice(eq + 1);
+        const num = Number(v);
+        result.set[k] = !isNaN(num) && v !== '' ? num : v === 'true' ? true : v === 'false' ? false : v;
+      }
     } else if (arg === '--format' || arg === '-f') {
       result.format = args[++i] as OutputFormat;
     } else if (arg === '--rule' || arg === '-r') {
@@ -92,6 +103,7 @@ USAGE:
   lgtm scan <path>                  Security scan only (skill-security rules)
   lgtm init                         Install hooks + /lgtm command into project
   lgtm preset install <name>        Install a preset (e.g. token-optimizer)
+  lgtm preset install <name> --set budget=20  Install with config value
   lgtm preset remove <name>         Remove an installed preset
   lgtm preset list                  Show available and installed presets
   lgtm compare                      Run baseline vs optimized token comparison
@@ -324,7 +336,7 @@ async function presetCommand(args: CLIArgs): Promise<number> {
         return 2;
       }
       try {
-        const result = await installPreset(presetName, projectRoot, { force: args.force });
+        const result = await installPreset(presetName, projectRoot, { force: args.force, config: args.set });
         console.log(`\nPreset "${result.presetName}" installed successfully!\n`);
         if (result.filesCreated.length > 0) {
           console.log('Files created:');

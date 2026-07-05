@@ -8,6 +8,25 @@ export async function installPreset(nameOrPath, projectRoot, options) {
     const lock = await readLock(claudeDir);
     const warnings = [];
     const filesCreated = [];
+    // Resolve config: merge defaults with provided values, validate types
+    const resolvedConfig = {};
+    if (manifest.config) {
+        for (const [key, param] of Object.entries(manifest.config)) {
+            const provided = options?.config?.[key];
+            if (provided !== undefined) {
+                const actual = param.type === 'number' ? Number(provided)
+                    : param.type === 'boolean' ? (provided === 'true' || provided === true)
+                        : String(provided);
+                if (param.type === 'number' && isNaN(actual)) {
+                    throw new Error(`Config "${key}" must be a number, got: ${provided}`);
+                }
+                resolvedConfig[key] = actual;
+            }
+            else {
+                resolvedConfig[key] = param.default;
+            }
+        }
+    }
     if (lock.installed[manifest.name] && !options?.force) {
         throw new Error(`Preset "${manifest.name}" is already installed. Use --force to reinstall.`);
     }
@@ -81,6 +100,12 @@ export async function installPreset(nameOrPath, projectRoot, options) {
             await fs.writeFile(claudeMdPath, claudeMd);
             filesCreated.push(claudeMdPath);
         }
+    }
+    // Write preset config file (if the preset declares config params)
+    if (manifest.config && Object.keys(resolvedConfig).length > 0) {
+        const configPath = path.join(claudeDir, `${manifest.name}.json`);
+        await fs.writeFile(configPath, JSON.stringify(resolvedConfig, null, 2) + '\n');
+        filesCreated.push(configPath);
     }
     // Merge settings.json
     const settingsPath = path.join(claudeDir, 'settings.json');

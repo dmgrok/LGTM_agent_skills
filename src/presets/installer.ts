@@ -14,13 +14,32 @@ export interface InstallResult {
 export async function installPreset(
   nameOrPath: string,
   projectRoot: string,
-  options?: { force?: boolean }
+  options?: { force?: boolean; config?: Record<string, string | number | boolean> }
 ): Promise<InstallResult> {
   const { manifest, baseDir } = await resolvePreset(nameOrPath);
   const claudeDir = path.join(projectRoot, '.claude');
   const lock = await readLock(claudeDir);
   const warnings: string[] = [];
   const filesCreated: string[] = [];
+
+  // Resolve config: merge defaults with provided values, validate types
+  const resolvedConfig: Record<string, string | number | boolean> = {};
+  if (manifest.config) {
+    for (const [key, param] of Object.entries(manifest.config)) {
+      const provided = options?.config?.[key];
+      if (provided !== undefined) {
+        const actual = param.type === 'number' ? Number(provided)
+          : param.type === 'boolean' ? (provided === 'true' || provided === true)
+          : String(provided);
+        if (param.type === 'number' && isNaN(actual as number)) {
+          throw new Error(`Config "${key}" must be a number, got: ${provided}`);
+        }
+        resolvedConfig[key] = actual;
+      } else {
+        resolvedConfig[key] = param.default;
+      }
+    }
+  }
 
   if (lock.installed[manifest.name] && !options?.force) {
     throw new Error(
@@ -110,6 +129,13 @@ export async function installPreset(
       await fs.writeFile(claudeMdPath, claudeMd);
       filesCreated.push(claudeMdPath);
     }
+  }
+
+  // Write preset config file (if the preset declares config params)
+  if (manifest.config && Object.keys(resolvedConfig).length > 0) {
+    const configPath = path.join(claudeDir, `${manifest.name}.json`);
+    await fs.writeFile(configPath, JSON.stringify(resolvedConfig, null, 2) + '\n');
+    filesCreated.push(configPath);
   }
 
   // Merge settings.json
