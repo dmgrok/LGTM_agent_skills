@@ -1,6 +1,126 @@
-# claude-code-lgtm
+# lgtm
 
-Claude Code's `.claude/` folder has no validation. You can ship a `settings.json` with a misspelled hook event name, a hook script that isn't executable, or a slash command missing its frontmatter — and nothing will tell you until something silently misbehaves.
+Make Claude Code cheaper and faster with one command.
+
+```bash
+npm install -g github:dmgrok/LGTM_agent_skills
+lgtm preset install token-optimizer
+```
+
+That's it. Your next Claude Code session uses ~30% fewer tokens and costs ~30% less. No config files to hand-edit, no docs to read.
+
+## What it installs
+
+The `token-optimizer` preset writes a complete `.claude/` configuration that:
+
+- **Switches to `opusplan`** — Opus plans the approach, Sonnet executes. 32% cheaper per token than pure Opus, same quality.
+- **Pre-approves 14 common tools** — `git *`, `grep *`, `find *`, `npm test *`, etc. Eliminates permission roundtrip tokens (each one costs ~500 tokens of back-and-forth).
+- **Adds a PreToolUse hook** — nudges Claude toward targeted line-range reads instead of reading entire files.
+- **Adds a PostToolUse hook** — warns when a tool response exceeds 50K chars, preventing context bloat.
+- **Appends CLAUDE.md guidelines** — behavioral rules like "grep before read", "batch tool calls", "don't re-read after writes".
+- **Installs `/token-status`** — a slash command to check your optimization config is active.
+
+Everything is reversible:
+
+```bash
+lgtm preset remove token-optimizer   # clean undo via lock file
+```
+
+## Prove it works
+
+```bash
+lgtm compare
+```
+
+Runs the same task twice — once with bare Claude Code (`--safe-mode`), once with your config — and prints the difference:
+
+```
+                      Baseline        Optimized       Delta
+  ────────────────────────────────────────────────────────────────
+  Model               sonnet-4-6      opusplan
+  Turns                      3               2              -1
+  Input tokens          24,312          18,104         -25.5%
+  Cache hit rate          0.0%           24.5%         +24.5%
+  Cost                 $0.0312         $0.0198         -36.5%
+  ────────────────────────────────────────────────────────────────
+```
+
+Or analyze a past session without re-running anything:
+
+```bash
+lgtm compare --session <uuid>
+```
+
+## Install
+
+```bash
+npm install -g github:dmgrok/LGTM_agent_skills
+```
+
+Requires Node >= 18. Optional: `jq` (for preset hooks).
+
+## Quick start
+
+```bash
+lgtm preset install token-optimizer   # optimize Claude Code
+lgtm compare                          # measure the difference
+lgtm                                  # lint your .claude/ config
+```
+
+---
+
+## Linting
+
+Beyond optimization, `lgtm` validates your entire `.claude/` folder — catching misconfigurations before they silently break your setup.
+
+```bash
+lgtm
+```
+
+```
+  LGTM — Claude Code Project Health
+  ──────────────────────────────────────────────────
+
+  .claude/settings.json
+    ✓ Valid schema
+    ✓ Hook events are valid
+
+  .claude/hooks/
+    ✓ token-optimizer-concise.sh is executable
+    ✓ token-optimizer-monitor.sh is executable
+
+  .claude/commands/
+    ✓ token-status.md has description frontmatter
+
+  ──────────────────────────────────────────────────
+  0 errors, 0 warnings  ✓
+```
+
+| Rule | What it validates |
+|------|-------------------|
+| **Settings** | Valid hook event names, matcher syntax, timeouts (1–600s), command paths exist |
+| **Hooks** | Executable bit, stdin handling, dangerous patterns (`curl \| bash`, `rm -rf /`), secrets |
+| **Commands** | Frontmatter present, `description` field, prompt injection patterns |
+| **Skill spec** | [Agent Skills spec](https://agentskills.io/specification) compliance |
+| **Skill security** | Prompt injection, code injection, data exfiltration (Cisco AI Defense taxonomy) |
+
+## CLI reference
+
+```bash
+lgtm                              # Check everything
+lgtm check [path]                 # Check a specific path
+lgtm check --rule hooks           # Only run hooks rules
+lgtm check --format json          # Machine-readable output
+lgtm check --format github        # GitHub Actions annotations
+lgtm scan <path>                  # Security scan only
+lgtm init                         # Install validation hooks into project
+lgtm preset install <name>        # Install a preset
+lgtm preset remove <name>         # Remove a preset (clean undo)
+lgtm preset list                  # Show available presets
+lgtm compare                      # Benchmark baseline vs optimized
+lgtm compare --session <uuid>     # Analyze a past session
+lgtm compare --prompt "..."       # Custom benchmark prompt
+```
 
 ## How it works
 
@@ -12,163 +132,6 @@ Claude Code's `.claude/` folder has no validation. You can ship a `settings.json
 └── SKILL.md      ──→                    ├─→ SkillSpecRule     ─┤   exit 0 or 1
                                          └─→ SkillSecurityRule ─┘
 ```
-
-`scanProject()` walks `.claude/` and finds all configuration files. `runRules()` runs all five rule classes in parallel, collecting findings. Output renders as terminal text, JSON, or GitHub Actions annotations.
-
-## What it catches
-
-| Rule | What it validates |
-|------|-------------------|
-| **Settings** | `settings.json` — valid hook event names, matcher syntax, hook types, timeouts (1–600s), command paths that exist on disk |
-| **Hooks** | `*.sh` files — executable bit set, stdin handling, dangerous patterns (`curl \| bash`, `rm -rf /`), hardcoded secrets |
-| **Commands** | Slash command `.md` files — frontmatter present, `description` field, prompt injection patterns, file size |
-| **Skill spec** | `SKILL.md` files — [Agent Skills spec](https://agentskills.io/specification) compliance (name format, required fields, metadata) |
-| **Skill security** | `SKILL.md` files — prompt injection, code injection, data exfiltration (10 categories from the Cisco AI Defense taxonomy) |
-
-## Install
-
-The package is not yet published to npm. Install from GitHub:
-
-```bash
-npm install -g github:dmgrok/LGTM_agent_skills
-# or run once:
-npx github:dmgrok/LGTM_agent_skills
-```
-
-**Prerequisites:** Node >= 18. For optional features: `jq` (required by preset hooks), `gitleaks` (secret scanning), `LAKERA_GUARD_API_KEY` (ML-based prompt injection detection).
-
-## CLI
-
-```bash
-lgtm                          # Check everything in the current directory
-lgtm check [path]             # Check a specific path
-lgtm check --rule hooks       # Only run hooks rules
-lgtm check --rule settings    # Only run settings rules
-lgtm check --rule skills      # Only run skills rules
-lgtm check --format json      # Machine-readable output
-lgtm check --format github    # GitHub Actions annotations
-lgtm scan <path>              # Security scan only (skill-security rule)
-lgtm init [path]              # Install LGTM hooks into a project
-lgtm preset install <name>    # Install a configuration preset
-lgtm preset remove <name>     # Remove a preset (clean undo)
-lgtm preset list              # Show available and installed presets
-lgtm compare                  # Benchmark: baseline vs optimized token usage
-lgtm compare --session <uuid> # Analyze a past session's token efficiency
-```
-
-## `lgtm compare`
-
-Proves what an optimized Claude Code config actually saves. Two modes:
-
-**Live comparison** — runs the same task twice (once with `--safe-mode`, once with your `.claude/` config) and compares token counts and cost directly.
-
-```bash
-lgtm compare
-lgtm compare --prompt "List all TypeScript files and what each exports"
-```
-
-```
-  LGTM Compare — Token Efficiency Benchmark
-  ──────────────────────────────────────────────────
-
-                        Baseline        Optimized       Delta
-  ──────────────────────────────────────────────────────────────────────
-  Model                 sonnet-4-6      opusplan
-  Turns                        3               2              -1
-  Input tokens            24,312          18,104         -25.5%
-  Output tokens            1,847           1,623         -12.1%
-  Cache hit rate            0.0%           24.5%         +24.5%
-  Duration                  8.2s            6.1s         -25.6%
-  ──────────────────────────────────────────────────────────────────────
-  Cost                   $0.0312         $0.0198         -36.5%
-  ──────────────────────────────────────────────────────────────────────
-
-  ↓ 36.5% cost reduction ($0.0114 per session)
-```
-
-**Session analysis** — reads token data from a past Claude Code session (`~/.claude/projects/...`) and estimates what it would have cost with the `token-optimizer` preset. Works offline, no API calls needed.
-
-```bash
-lgtm compare --session f88a77db-85ce-43c5-9101-a855d6bd26b4
-```
-
-```
-  LGTM Compare — Session Analysis
-  ──────────────────────────────────────────────────
-
-  Session: f88a77db-85ce-43c5-9101-a855d6bd26b4
-  Model: claude-sonnet-4-6  |  Turns: 133
-
-                        Actual          Estimated       Delta
-  ──────────────────────────────────────────────────────────────────────
-  Input tokens             4,077           3,062         -24.9%
-  Cache creates        2,763,168       2,348,693
-  Cache reads         12,724,208      14,632,839
-  Output tokens           62,853          62,853              —
-  ──────────────────────────────────────────────────────────────────────
-  Cost                   $14.22           $9.87         -30.6%
-  ──────────────────────────────────────────────────────────────────────
-
-  Estimated savings with token-optimizer: $4.35 (30.6%)
-
-  Assumptions:
-    • Input tokens reduced 25% — permission pre-approval (5%) + targeted reads (20%)
-    • Cache hit rate improved 15% from stable permission config
-    • Model: claude-sonnet-4-6 → opusplan (80% Sonnet + 20% Opus, $3.40/MTok)
-    • Output tokens unchanged — optimization targets input, not generated content
-
-  Install: lgtm preset install token-optimizer
-```
-
-If `claude` CLI is not installed, `lgtm compare` automatically falls back to session analysis on your most recent session.
-
-## `lgtm init`
-
-Installs LGTM's own hooks into your project:
-
-```bash
-lgtm init
-```
-
-Adds:
-- `.claude/hooks/lgtm-validate.sh` — PostToolUse hook, validates any modified SKILL.md and injects findings as a system message
-- `.claude/hooks/lgtm-precommit.sh` — PreToolUse hook, blocks `git commit` (exit 2) if staged SKILL.md files fail validation
-- `.claude/commands/lgtm.md` — `/lgtm` slash command for on-demand checks
-
-## Presets
-
-A preset bundles Claude Code configuration: hooks, permissions, model settings, slash commands, CLAUDE.md guidelines. Installing merges the config into your project; removing cleanly undoes all changes via a lock file at `.claude/presets.lock.json`.
-
-```bash
-lgtm preset install token-optimizer
-lgtm preset remove token-optimizer
-lgtm preset list
-```
-
-### Built-in: `token-optimizer`
-
-| Change | Details |
-|--------|---------|
-| `model: opusplan` | Opus plans, Sonnet executes — 32% cheaper per token than pure Opus |
-| 14 `permissions.allow` entries | Pre-approves `git *`, `grep *`, `find *`, etc. — eliminates permission roundtrips |
-| PreToolUse hook on `Read\|Agent` | Nudges Claude toward targeted line-range reads |
-| PostToolUse hook on `Read` | Warns when tool output exceeds 50K chars |
-| CLAUDE.md snippet | Behavioral guidelines: grep before read, batch calls, no re-reads after writes |
-| `/token-status` command | Reports installed model, permissions, and hook status |
-
-```bash
-lgtm preset install token-optimizer
-# Then run:
-lgtm compare
-```
-
-To install a local preset:
-
-```bash
-lgtm preset install ./my-preset   # directory containing preset.json
-```
-
-See [presets/token-optimizer/preset.json](presets/token-optimizer/preset.json) for the manifest schema.
 
 ## GitHub Action
 
@@ -211,12 +174,10 @@ jobs:
 import { scanProject, runRules, formatResults, ALL_RULES } from 'lgtm';
 import { compareCommand, parseSession, estimateSavings } from 'lgtm';
 
-// Lint .claude/ config
 const files = await scanProject({ path: './my-project' });
 const result = await runRules({ files }, ALL_RULES);
 console.log(formatResults(result, files, 'cli'));
 
-// Analyze a session
 const metrics = await parseSession('f88a77db-...');
 const estimate = estimateSavings(metrics);
 ```
