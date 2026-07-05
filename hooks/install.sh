@@ -1,8 +1,8 @@
 #!/bin/bash
-# LGTM Agent Skills - Claude Code Hook Installer
+# CC-Tricks - Claude Code Hook Installer
 #
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/dmgrok/LGTM_agent_skills/main/hooks/install.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/dmgrok/claude-code-tricks-cookbook/main/hooks/install.sh | bash
 #
 # Or manually:
 #   cd your-project && bash path/to/install.sh
@@ -20,7 +20,7 @@ HOOKS_DIR="$CLAUDE_DIR/hooks"
 COMMANDS_DIR="$CLAUDE_DIR/commands"
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 
-echo "🔍 LGTM Agent Skills — Claude Code Hook Installer"
+echo "🔍 CC-Tricks — Claude Code Hook Installer"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -37,16 +37,16 @@ fi
 mkdir -p "$HOOKS_DIR" "$COMMANDS_DIR"
 
 # Download hook scripts
-REPO_BASE="https://raw.githubusercontent.com/dmgrok/LGTM_agent_skills/main"
+REPO_BASE="https://raw.githubusercontent.com/dmgrok/claude-code-tricks-cookbook/main"
 
 echo "📥 Installing hooks..."
 
-curl -sSL "$REPO_BASE/.claude/hooks/lgtm-validate.sh" -o "$HOOKS_DIR/lgtm-validate.sh"
-chmod +x "$HOOKS_DIR/lgtm-validate.sh"
+curl -sSL "$REPO_BASE/.claude/hooks/cct-validate.sh" -o "$HOOKS_DIR/cct-validate.sh"
+chmod +x "$HOOKS_DIR/cct-validate.sh"
 echo "   ✓ Post-edit validation hook"
 
-curl -sSL "$REPO_BASE/.claude/hooks/lgtm-precommit.sh" -o "$HOOKS_DIR/lgtm-precommit.sh"
-chmod +x "$HOOKS_DIR/lgtm-precommit.sh"
+curl -sSL "$REPO_BASE/.claude/hooks/cct-precommit.sh" -o "$HOOKS_DIR/cct-precommit.sh"
+chmod +x "$HOOKS_DIR/cct-precommit.sh"
 echo "   ✓ Pre-commit gate hook"
 
 curl -sSL "$REPO_BASE/.claude/commands/lgtm.md" -o "$COMMANDS_DIR/lgtm.md"
@@ -63,14 +63,14 @@ if [[ -f "$SETTINGS_FILE" ]]; then
     echo "   ⚠️  hooks key already exists in settings.json"
     echo "   Please add manually. Required configuration:"
     echo ""
-    echo '   "PostToolUse": [{"matcher": "Edit|Write", "hooks": [{"type": "command", "command": ".claude/hooks/lgtm-validate.sh", "timeout": 30}]}]'
-    echo '   "PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": ".claude/hooks/lgtm-precommit.sh", "timeout": 30}]}]'
+    echo '   "PostToolUse": [{"matcher": "Edit|Write", "hooks": [{"type": "command", "command": ".claude/hooks/cct-validate.sh", "timeout": 30}]}]'
+    echo '   "PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": ".claude/hooks/cct-precommit.sh", "timeout": 30}]}]'
   else
     # Add hooks to existing settings
     echo "$EXISTING" | jq '. + {
       "hooks": {
-        "PostToolUse": [{"matcher": "Edit|Write", "hooks": [{"type": "command", "command": ".claude/hooks/lgtm-validate.sh", "timeout": 30}]}],
-        "PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": ".claude/hooks/lgtm-precommit.sh", "timeout": 30}]}]
+        "PostToolUse": [{"matcher": "Edit|Write", "hooks": [{"type": "command", "command": ".claude/hooks/cct-validate.sh", "timeout": 30}]}],
+        "PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": ".claude/hooks/cct-precommit.sh", "timeout": 30}]}]
       }
     }' > "$SETTINGS_FILE"
     echo "   ✓ Hooks added to settings.json"
@@ -85,7 +85,7 @@ else
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/lgtm-validate.sh",
+            "command": ".claude/hooks/cct-validate.sh",
             "timeout": 30
           }
         ]
@@ -97,7 +97,7 @@ else
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/lgtm-precommit.sh",
+            "command": ".claude/hooks/cct-precommit.sh",
             "timeout": 30
           }
         ]
@@ -111,7 +111,7 @@ fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ LGTM hooks installed!"
+echo "✅ CC-Tricks hooks installed!"
 echo ""
 echo "What's active:"
 echo "  • SKILL.md files are validated after every edit"

@@ -30,7 +30,7 @@ export async function compareCommand(options: CompareOptions): Promise<number> {
 async function liveCompareMode(options: CompareOptions): Promise<number> {
   const prompt = options.prompt;
 
-  console.log('\n  LGTM Compare — Token Efficiency Benchmark');
+  console.log('\n  CC-Tricks Compare — Token Efficiency Benchmark');
   console.log('  ' + '─'.repeat(50));
   if (prompt) {
     console.log(`\n  Task: "${prompt.slice(0, 60)}${prompt.length > 60 ? '…' : ''}"`);
@@ -64,7 +64,7 @@ async function liveCompareMode(options: CompareOptions): Promise<number> {
 }
 
 async function sessionAnalysisMode(sessionId: string): Promise<number> {
-  console.log('\n  LGTM Compare — Session Analysis');
+  console.log('\n  CC-Tricks Compare — Session Analysis');
   console.log('  ' + '─'.repeat(50));
   console.log(`\n  Session: ${sessionId}`);
 
@@ -239,7 +239,7 @@ function printEstimationTable(
   for (const a of assumptions) {
     console.log(`    • ${a}`);
   }
-  console.log('\n  Install: lgtm preset install token-optimizer\n');
+  console.log('\n  Install: cc-tricks preset install token-optimizer\n');
 }
 
 export { estimateSavings, parseSession };

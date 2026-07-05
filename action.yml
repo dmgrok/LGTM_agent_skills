@@ -1,6 +1,6 @@
-name: 'LGTM Agent Skills Validator'
+name: 'CC-Tricks Validator'
 description: 'Validate Agent Skills files with scoring and KPI breakdown'
-author: 'LGTM'
+author: 'CC-Tricks'
 branding:
   icon: 'check-circle'
   color: 'green'

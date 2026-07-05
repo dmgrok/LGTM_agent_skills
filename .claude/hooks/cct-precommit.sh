@@ -9,7 +9,7 @@ STAGED=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep 'SKI
 [[ -z "$STAGED" ]] && exit 0
 FAILURES=""
 while IFS= read -r f; do
-  RESULT=$(lgtm check "$f" --format json 2>/dev/null) || continue
+  RESULT=$(cc-tricks check "$f" --format json 2>/dev/null) || continue
   PASSED=$(echo "$RESULT" | jq -r '.passed')
   [[ "$PASSED" != "true" ]] && FAILURES="$FAILURES\n  \u2022 $f"
 done <<< "$STAGED"

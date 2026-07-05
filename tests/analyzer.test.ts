@@ -130,7 +130,7 @@ describe('Reporter', () => {
     const files = await scanProject({ path: process.cwd() });
     const result = await runRules({ files }, ALL_RULES);
     const output = formatResults(result, files, 'cli');
-    expect(output).toContain('LGTM');
+    expect(output).toContain('CC-Tricks');
   });
 });
 

@@ -1,12 +1,12 @@
 {
-  "name": "lgtm",
+  "name": "cc-tricks",
   "version": "1.0.0",
-  "description": "LGTM — Claude Code project health checks",
+  "description": "CC-Tricks — Claude Code Cookbook: presets, guardrails, and tricks for Claude Code",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "lgtm": "./dist/cli.js"
+    "cc-tricks": "./dist/cli.js"
   },
   "files": [
     "dist/",
@@ -24,7 +24,7 @@
   },
   "keywords": [
     "agent-skills",
-    "lgtm",
+    "cc-tricks",
     "validation",
     "security-scanner",
     "ai-agents",

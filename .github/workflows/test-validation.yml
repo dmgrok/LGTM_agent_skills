@@ -1,4 +1,4 @@
-name: Test LGTM Skills Validation
+name: Test CC-Tricks Validation
 
 on:
   workflow_dispatch:

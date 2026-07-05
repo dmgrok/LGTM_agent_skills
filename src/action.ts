@@ -1,7 +1,7 @@
 /**
  * GitHub Action Entry Point
  *
- * Runs the LGTM rule-based project health checks and reports results.
+ * Runs the CC-Tricks rule-based project health checks and reports results.
  */
 
 import * as fs from 'fs';
@@ -75,7 +75,7 @@ async function run(): Promise<void> {
     core.info(`Results saved to ${resultsPath}`);
 
     // Write GitHub Actions job summary
-    let summary = `# LGTM Project Health Report\n\n`;
+    let summary = `# CC-Tricks Project Health Report\n\n`;
     summary += `**Status:** ${result.passed ? 'PASSED' : 'FAILED'}\n`;
     summary += `**Errors:** ${result.errors} | **Warnings:** ${result.warnings} | **Info:** ${result.infos}\n\n`;
 

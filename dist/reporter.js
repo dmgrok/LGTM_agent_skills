@@ -22,7 +22,7 @@ function groupByFile(findings) {
 function formatCli(result, files) {
     const lines = [];
     lines.push('');
-    lines.push(`  ${BOLD}LGTM — Claude Code Project Health${RESET}`);
+    lines.push(`  ${BOLD}CC-Tricks — Claude Code Cookbook${RESET}`);
     lines.push(`  ${'─'.repeat(46)}`);
     lines.push('');
     if (result.findings.length === 0) {

@@ -1,5 +1,5 @@
 /**
- * Before/after tests: what LGTM catches in a typical Claude Code project
+ * Before/after tests: what CC-Tricks catches in a typical Claude Code project
  * that looks fine to the human eye but has silent problems.
  *
  * The "broken" fixture represents a real project a developer might ship:
@@ -9,7 +9,7 @@
  *   - a referenced hook file that doesn't exist
  *
  * The "healthy" fixture is the corrected version of the same project.
- * LGTM should find 0 errors against it.
+ * CC-Tricks should find 0 errors against it.
  */
 
 import { describe, it, expect } from 'vitest';

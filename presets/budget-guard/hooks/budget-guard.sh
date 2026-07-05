@@ -19,7 +19,7 @@ SESSION=$(ls -t "$SESSION_DIR"/*.jsonl 2>/dev/null | head -1)
 
 # Incremental state: avoid re-parsing the full file every tool call
 STATE_HASH=$(echo "$SESSION" | cksum | awk '{print $1}')
-STATE_FILE="/tmp/lgtm-budget-$STATE_HASH"
+STATE_FILE="/tmp/cct-budget-$STATE_HASH"
 CURRENT_SIZE=$(stat -f%z "$SESSION" 2>/dev/null || stat -c%s "$SESSION" 2>/dev/null || echo "0")
 
 if [ -f "$STATE_FILE" ]; then
@@ -68,7 +68,7 @@ WARN=$(echo "$RUNNING_COST >= $WARN_THRESHOLD" | bc -l 2>/dev/null || echo "0")
 
 if [ "$OVER" = "1" ]; then
   COST_FMT=$(printf '%.4f' "$RUNNING_COST")
-  echo "Budget exceeded (\$$COST_FMT / \$$BUDGET). Run \`lgtm preset remove budget-guard\` to disable." >&2
+  echo "Budget exceeded (\$$COST_FMT / \$$BUDGET). Run \`cc-tricks preset remove budget-guard\` to disable." >&2
   exit 2
 elif [ "$WARN" = "1" ]; then
   COST_FMT=$(printf '%.4f' "$RUNNING_COST")

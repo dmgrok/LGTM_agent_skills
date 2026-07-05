@@ -92,23 +92,23 @@ function parseArgs(argv: string[]): CLIArgs {
 
 function printHelp(): void {
   console.log(`
-lgtm - Claude Code project health tool
+cc-tricks - Claude Code project health tool
 
 USAGE:
-  lgtm                              Auto-discover and check everything
-  lgtm check [path]                 Check project health (default command)
-  lgtm check --rule <filter>        Only run matching rules
-  lgtm check --format <fmt>         Output: cli (default), json, github
-  lgtm check --severity <s>         Minimum severity: error, warning, info
-  lgtm scan <path>                  Security scan only (skill-security rules)
-  lgtm init                         Install hooks + /lgtm command into project
-  lgtm preset install <name>        Install a preset (e.g. token-optimizer)
-  lgtm preset install <name> --set budget=20  Install with config value
-  lgtm preset remove <name>         Remove an installed preset
-  lgtm preset list                  Show available and installed presets
-  lgtm compare                      Run baseline vs optimized token comparison
-  lgtm compare --session <uuid>     Analyze a past session's token efficiency
-  lgtm compare --prompt "..."       Custom prompt for live comparison
+  cc-tricks                         Auto-discover and check everything
+  cc-tricks check [path]                 Check project health (default command)
+  cc-tricks check --rule <filter>        Only run matching rules
+  cc-tricks check --format <fmt>         Output: cli (default), json, github
+  cc-tricks check --severity <s>         Minimum severity: error, warning, info
+  cc-tricks scan <path>                  Security scan only (skill-security rules)
+  cc-tricks init                         Install hooks + /cc-tricks command into project
+  cc-tricks preset install <name>        Install a preset (e.g. token-optimizer)
+  cc-tricks preset install <name> --set budget=20  Install with config value
+  cc-tricks preset remove <name>         Remove an installed preset
+  cc-tricks preset list                  Show available and installed presets
+  cc-tricks compare                      Run baseline vs optimized token comparison
+  cc-tricks compare --session <uuid>     Analyze a past session's token efficiency
+  cc-tricks compare --prompt "..."       Custom prompt for live comparison
 
 OPTIONS:
   -f, --format <fmt>     Output format: cli, json, github
@@ -124,14 +124,14 @@ function printVersion(): void {
   try {
     const pkgPath = path.resolve(__dirname, '..', 'package.json');
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-    console.log(`lgtm v${pkg.version}`);
+    console.log(`cc-tricks v${pkg.version}`);
   } catch {
     const pkgPath = path.resolve(__dirname, '..', '..', 'package.json');
     try {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-      console.log(`lgtm v${pkg.version}`);
+      console.log(`cc-tricks v${pkg.version}`);
     } catch {
-      console.log('lgtm v1.0.0');
+      console.log('cc-tricks v1.0.0');
     }
   }
 }
@@ -142,13 +142,13 @@ FILE_PATH=$(echo "$INPUT" | jq -r '.tool_call.file_path // .file_path // empty')
 if [[ -z "$FILE_PATH" ]] || [[ "$(basename "$FILE_PATH")" != "SKILL.md" ]]; then
   exit 0
 fi
-RESULT=$(lgtm check "$FILE_PATH" --format json 2>/dev/null) || exit 0
+RESULT=$(cc-tricks check "$FILE_PATH" --format json 2>/dev/null) || exit 0
 PASSED=$(echo "$RESULT" | jq -r '.passed')
 if [[ "$PASSED" == "true" ]]; then
-  echo "{\\"continue\\": true, \\"systemMessage\\": \\"\\u2705 LGTM: $FILE_PATH \\u2014 no issues found.\\"}"
+  echo "{\\"continue\\": true, \\"systemMessage\\": \\"\\u2705 CC-Tricks: $FILE_PATH \\u2014 no issues found.\\"}"
 else
   ERRORS=$(echo "$RESULT" | jq -r '.errors')
-  echo "{\\"continue\\": true, \\"systemMessage\\": \\"\\u26a0\\ufe0f LGTM: $FILE_PATH \\u2014 $ERRORS error(s) found. Run /lgtm for details.\\"}"
+  echo "{\\"continue\\": true, \\"systemMessage\\": \\"\\u26a0\\ufe0f CC-Tricks: $FILE_PATH \\u2014 $ERRORS error(s) found. Run /cc-tricks for details.\\"}"
 fi
 `;
 
@@ -163,24 +163,24 @@ STAGED=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep 'SKI
 [[ -z "$STAGED" ]] && exit 0
 FAILURES=""
 while IFS= read -r f; do
-  RESULT=$(lgtm check "$f" --format json 2>/dev/null) || continue
+  RESULT=$(cc-tricks check "$f" --format json 2>/dev/null) || continue
   PASSED=$(echo "$RESULT" | jq -r '.passed')
   [[ "$PASSED" != "true" ]] && FAILURES="$FAILURES\\n  \\u2022 $f"
 done <<< "$STAGED"
 if [[ -n "$FAILURES" ]]; then
-  echo "\\ud83d\\udeab LGTM: Failing skills block commit:$FAILURES" >&2
+  echo "\\ud83d\\udeab CC-Tricks: Failing skills block commit:$FAILURES" >&2
   exit 2
 fi
 `;
 
-const LGTM_COMMAND = `---
-description: Run LGTM health checks on this project
+const CCT_COMMAND = `---
+description: Run CC-Tricks health checks on this project
 ---
 
-Run \`lgtm check\` against the current project to validate Claude Code configuration and skills.
+Run \`cc-tricks check\` against the current project to validate Claude Code configuration and skills.
 
 ## Instructions
-1. Run: \`lgtm check\`
+1. Run: \`cc-tricks check\`
 2. Display the full output to the user.
 3. If issues are found, explain each one and suggest fixes.
 `;
@@ -189,7 +189,7 @@ async function checkCommand(args: CLIArgs): Promise<number> {
   const files = await scanProject({ path: args.path });
 
   if (!files.claudeDir && files.skillFiles.length === 0) {
-    console.log('No .claude/ directory or SKILL.md files found. Run `lgtm init` to set up hooks.');
+    console.log('No .claude/ directory or SKILL.md files found. Run `cc-tricks init` to set up hooks.');
     return 0;
   }
 
@@ -208,7 +208,7 @@ async function checkCommand(args: CLIArgs): Promise<number> {
 async function scanCommand(args: CLIArgs): Promise<number> {
   if (!args.path) {
     console.error('Error: scan requires a path argument');
-    console.error('Usage: lgtm scan <path>');
+    console.error('Usage: cc-tricks scan <path>');
     process.exit(2);
   }
 
@@ -231,16 +231,16 @@ async function initCommand(targetPath?: string): Promise<number> {
   fs.mkdirSync(hooksDir, { recursive: true });
   fs.mkdirSync(commandsDir, { recursive: true });
 
-  const validatePath = path.join(hooksDir, 'lgtm-validate.sh');
+  const validatePath = path.join(hooksDir, 'cct-validate.sh');
   fs.writeFileSync(validatePath, VALIDATE_HOOK);
   fs.chmodSync(validatePath, 0o755);
 
-  const precommitPath = path.join(hooksDir, 'lgtm-precommit.sh');
+  const precommitPath = path.join(hooksDir, 'cct-precommit.sh');
   fs.writeFileSync(precommitPath, PRECOMMIT_HOOK);
   fs.chmodSync(precommitPath, 0o755);
 
-  const commandPath = path.join(commandsDir, 'lgtm.md');
-  fs.writeFileSync(commandPath, LGTM_COMMAND);
+  const commandPath = path.join(commandsDir, 'cc-tricks.md');
+  fs.writeFileSync(commandPath, CCT_COMMAND);
 
   const hookConfig = {
     hooks: {
@@ -250,7 +250,7 @@ async function initCommand(targetPath?: string): Promise<number> {
           hooks: [
             {
               type: 'command',
-              command: `.claude/hooks/lgtm-validate.sh`,
+              command: `.claude/hooks/cct-validate.sh`,
               timeout: 30,
             },
           ],
@@ -262,7 +262,7 @@ async function initCommand(targetPath?: string): Promise<number> {
           hooks: [
             {
               type: 'command',
-              command: `.claude/hooks/lgtm-precommit.sh`,
+              command: `.claude/hooks/cct-precommit.sh`,
               timeout: 30,
             },
           ],
@@ -285,7 +285,7 @@ async function initCommand(targetPath?: string): Promise<number> {
 
     const hasValidate = existing.hooks.PostToolUse.some(
       (h: { hooks?: { command?: string }[] }) =>
-        h.hooks?.some(hook => hook.command?.includes('lgtm-validate'))
+        h.hooks?.some(hook => hook.command?.includes('cct-validate'))
     );
     if (!hasValidate) {
       existing.hooks.PostToolUse.push(hookConfig.hooks.PostToolUse[0]);
@@ -293,7 +293,7 @@ async function initCommand(targetPath?: string): Promise<number> {
 
     const hasPrecommit = existing.hooks.PreToolUse.some(
       (h: { hooks?: { command?: string }[] }) =>
-        h.hooks?.some(hook => hook.command?.includes('lgtm-precommit'))
+        h.hooks?.some(hook => hook.command?.includes('cct-precommit'))
     );
     if (!hasPrecommit) {
       existing.hooks.PreToolUse.push(hookConfig.hooks.PreToolUse[0]);
@@ -305,19 +305,19 @@ async function initCommand(targetPath?: string): Promise<number> {
   }
 
   console.log(`
-lgtm initialized successfully!
+cc-tricks initialized successfully!
 
 Created:
-  .claude/hooks/lgtm-validate.sh    (post-edit hook)
-  .claude/hooks/lgtm-precommit.sh   (pre-commit hook)
-  .claude/commands/lgtm.md          (/lgtm slash command)
+  .claude/hooks/cct-validate.sh    (post-edit hook)
+  .claude/hooks/cct-precommit.sh   (pre-commit hook)
+  .claude/commands/cc-tricks.md     (/cc-tricks slash command)
   .claude/settings.json             (hook configuration)
 
 Hooks will automatically:
   - Validate SKILL.md files after edits
   - Block commits with failing skills
 
-Use /lgtm in Claude Code to run checks manually.
+Use /cc-tricks in Claude Code to run checks manually.
 `);
 
   return 0;
@@ -331,8 +331,8 @@ async function presetCommand(args: CLIArgs): Promise<number> {
       const presetName = args.path;
       if (!presetName) {
         console.error('Error: preset install requires a preset name');
-        console.error('Usage: lgtm preset install <name>');
-        console.error('Example: lgtm preset install token-optimizer');
+        console.error('Usage: cc-tricks preset install <name>');
+        console.error('Example: cc-tricks preset install token-optimizer');
         return 2;
       }
       try {
@@ -350,7 +350,7 @@ async function presetCommand(args: CLIArgs): Promise<number> {
             console.log(`  ${w}`);
           }
         }
-        console.log('\nRun `lgtm check` to validate the configuration.');
+        console.log('\nRun `cc-tricks check` to validate the configuration.');
       } catch (err) {
         console.error(`Error: ${(err as Error).message}`);
         return 1;
@@ -362,7 +362,7 @@ async function presetCommand(args: CLIArgs): Promise<number> {
       const presetName = args.path;
       if (!presetName) {
         console.error('Error: preset remove requires a preset name');
-        console.error('Usage: lgtm preset remove <name>');
+        console.error('Usage: cc-tricks preset remove <name>');
         return 2;
       }
       try {
@@ -404,7 +404,7 @@ async function presetCommand(args: CLIArgs): Promise<number> {
     }
 
     default:
-      console.error('Usage: lgtm preset <install|remove|list> [name]');
+      console.error('Usage: cc-tricks preset <install|remove|list> [name]');
       return 2;
   }
 }

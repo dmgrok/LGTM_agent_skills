@@ -6,14 +6,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/lgtm-validate.sh",
+            "command": ".claude/hooks/cct-validate.sh",
             "timeout": 30
           }
         ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "command": ".claude/hooks/lgtm-validate.sh"
       }
     ],
     "PreToolUse": [
@@ -22,14 +18,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/lgtm-precommit.sh",
+            "command": ".claude/hooks/cct-precommit.sh",
             "timeout": 30
           }
         ]
-      },
-      {
-        "matcher": "Bash",
-        "command": ".claude/hooks/lgtm-precommit.sh"
       }
     ]
   }

@@ -13,7 +13,7 @@ SESSION=$(ls -t "$SESSION_DIR"/*.jsonl 2>/dev/null | head -1)
 
 # Incremental state to avoid re-parsing the full file every call
 SESSION_HASH=$(echo "$SESSION" | cksum | awk '{print $1}')
-STATE_FILE="/tmp/lgtm-compact-$SESSION_HASH"
+STATE_FILE="/tmp/cct-compact-$SESSION_HASH"
 CURRENT_SIZE=$(stat -f%z "$SESSION" 2>/dev/null || stat -c%s "$SESSION" 2>/dev/null || echo "0")
 
 if [ -f "$STATE_FILE" ]; then

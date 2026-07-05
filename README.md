@@ -1,10 +1,10 @@
-# lgtm
+# cc-tricks
 
 Make Claude Code cheaper and faster with one command.
 
 ```bash
-npm install -g github:dmgrok/LGTM_agent_skills
-lgtm preset install token-optimizer
+npm install -g github:dmgrok/claude-code-tricks-cookbook
+cc-tricks preset install token-optimizer
 ```
 
 That's it. Your next Claude Code session uses ~30% fewer tokens and costs ~30% less. No config files to hand-edit, no docs to read.
@@ -23,13 +23,13 @@ The `token-optimizer` preset writes a complete `.claude/` configuration that:
 Everything is reversible:
 
 ```bash
-lgtm preset remove token-optimizer   # clean undo via lock file
+cc-tricks preset remove token-optimizer   # clean undo via lock file
 ```
 
 ## Prove it works
 
 ```bash
-lgtm compare
+cc-tricks compare
 ```
 
 Runs the same task twice — once with bare Claude Code (`--safe-mode`), once with your config — and prints the difference:
@@ -48,13 +48,13 @@ Runs the same task twice — once with bare Claude Code (`--safe-mode`), once wi
 Or analyze a past session without re-running anything:
 
 ```bash
-lgtm compare --session <uuid>
+cc-tricks compare --session <uuid>
 ```
 
 ## Install
 
 ```bash
-npm install -g github:dmgrok/LGTM_agent_skills
+npm install -g github:dmgrok/claude-code-tricks-cookbook
 ```
 
 Requires Node >= 18. Optional: `jq` (for preset hooks).
@@ -62,24 +62,24 @@ Requires Node >= 18. Optional: `jq` (for preset hooks).
 ## Quick start
 
 ```bash
-lgtm preset install token-optimizer              # optimize Claude Code
-lgtm preset install github:user/my-preset        # install from GitHub
-lgtm compare                                     # measure the difference
-lgtm                                             # lint your .claude/ config
+cc-tricks preset install token-optimizer              # optimize Claude Code
+cc-tricks preset install github:user/my-preset        # install from GitHub
+cc-tricks compare                                     # measure the difference
+cc-tricks                                             # lint your .claude/ config
 ```
 
 ---
 
 ## Linting
 
-Beyond optimization, `lgtm` validates your entire `.claude/` folder — catching misconfigurations before they silently break your setup.
+Beyond optimization, `cc-tricks` validates your entire `.claude/` folder — catching misconfigurations before they silently break your setup.
 
 ```bash
-lgtm
+cc-tricks
 ```
 
 ```
-  LGTM — Claude Code Project Health
+  CC-Tricks — Claude Code Cookbook
   ──────────────────────────────────────────────────
 
   .claude/settings.json
@@ -108,23 +108,23 @@ lgtm
 ## CLI reference
 
 ```bash
-lgtm                              # Check everything
-lgtm check [path]                 # Check a specific path
-lgtm check --rule hooks           # Only run hooks rules
-lgtm check --format json          # Machine-readable output
-lgtm check --format github        # GitHub Actions annotations
-lgtm scan <path>                  # Security scan only
-lgtm init                         # Install validation hooks into project
-lgtm preset install <name>                    # Install a built-in preset
-lgtm preset install <name> --set key=value    # Install with config
-lgtm preset install github:user/repo          # Install from GitHub
-lgtm preset install github:user/repo#v2       # Specific ref
-lgtm preset install github:user/repo/subpath  # Subpath in monorepo
-lgtm preset remove <name>                     # Remove a preset (clean undo)
-lgtm preset list                              # Show available presets
-lgtm compare                      # Benchmark baseline vs optimized
-lgtm compare --session <uuid>     # Analyze a past session
-lgtm compare --prompt "..."       # Custom benchmark prompt
+cc-tricks                              # Check everything
+cc-tricks check [path]                 # Check a specific path
+cc-tricks check --rule hooks           # Only run hooks rules
+cc-tricks check --format json          # Machine-readable output
+cc-tricks check --format github        # GitHub Actions annotations
+cc-tricks scan <path>                  # Security scan only
+cc-tricks init                         # Install validation hooks into project
+cc-tricks preset install <name>                    # Install a built-in preset
+cc-tricks preset install <name> --set key=value    # Install with config
+cc-tricks preset install github:user/repo          # Install from GitHub
+cc-tricks preset install github:user/repo#v2       # Specific ref
+cc-tricks preset install github:user/repo/subpath  # Subpath in monorepo
+cc-tricks preset remove <name>                     # Remove a preset (clean undo)
+cc-tricks preset list                              # Show available presets
+cc-tricks compare                      # Benchmark baseline vs optimized
+cc-tricks compare --session <uuid>     # Analyze a past session
+cc-tricks compare --prompt "..."       # Custom benchmark prompt
 ```
 
 ## How it works
@@ -141,7 +141,7 @@ lgtm compare --prompt "..."       # Custom benchmark prompt
 ## GitHub Action
 
 ```yaml
-name: LGTM
+name: CC-Tricks
 on: [push, pull_request]
 
 jobs:
@@ -149,7 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dmgrok/LGTM_agent_skills@main
+      - uses: dmgrok/claude-code-tricks-cookbook@main
         with:
           path: '.'
           fail-on-error: true
@@ -176,8 +176,8 @@ jobs:
 ## Programmatic API
 
 ```typescript
-import { scanProject, runRules, formatResults, ALL_RULES } from 'lgtm';
-import { compareCommand, parseSession, estimateSavings } from 'lgtm';
+import { scanProject, runRules, formatResults, ALL_RULES } from 'cc-tricks';
+import { compareCommand, parseSession, estimateSavings } from 'cc-tricks';
 
 const files = await scanProject({ path: './my-project' });
 const result = await runRules({ files }, ALL_RULES);

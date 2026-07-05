@@ -18,7 +18,7 @@ if [ -n "$SESSION" ]; then
 else
   SESSION_HASH="default"
 fi
-STATE_FILE="/tmp/lgtm-safe-agents-$SESSION_HASH"
+STATE_FILE="/tmp/cct-safe-agents-$SESSION_HASH"
 
 # Read and increment counter
 COUNT=0
@@ -27,7 +27,7 @@ COUNT=$((COUNT + 1))
 echo "$COUNT" > "$STATE_FILE"
 
 if [ "$COUNT" -gt "$AGENT_LIMIT" ]; then
-  echo "🛑 safe-mode blocked: agent spawn #$COUNT — runaway limit of $AGENT_LIMIT reached. Run \`lgtm preset remove safe-mode\` to disable." >&2
+  echo "🛑 safe-mode blocked: agent spawn #$COUNT — runaway limit of $AGENT_LIMIT reached. Run \`cc-tricks preset remove safe-mode\` to disable." >&2
   exit 2
 elif [ "$COUNT" -eq "$AGENT_LIMIT" ]; then
   printf '{"continue":true,"systemMessage":"⚠️ safe-mode: agent spawn #%d of %d (limit). This is the last agent spawn allowed this session."}\n' "$COUNT" "$AGENT_LIMIT"
